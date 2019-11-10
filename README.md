@@ -1,4 +1,4 @@
-# Atm_pressure_predictor
+# Atm pressure predictor
 This is a neural network which predicts the next value of pressure out of the last thirty samples.
 
 
