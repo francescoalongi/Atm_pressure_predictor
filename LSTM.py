@@ -4,13 +4,16 @@ import numpy as np
 
 from keras.models import Sequential
 from keras.layers import Dense
-from keras.layers import LSTM
+from keras.layers import CuDNNLSTM
 from keras.layers import Dropout
 
 from sklearn.preprocessing import MinMaxScaler
 
+#import os
+#os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+
 # data preparation
-dcsv = pd.read_csv('data_grouped_right.csv', usecols=['pressure'])
+dcsv = pd.read_csv('../data_grouped.csv', usecols=['pressure'])
 data = dcsv['pressure'].values
 
 # feature scaling: this will help lstm model to converge faster
@@ -33,16 +36,13 @@ for i in range(30,18000):
 x_train, y_train = np.array(x_train), np.array(y_train)
 
 x_train = np.reshape(x_train, (x_train.shape[0], x_train.shape[1], 1))
+y_train = np.reshape(y_train, (y_train.shape[0]))
 
 # building the network
 regressor = Sequential()
-regressor.add(LSTM(units=45,return_sequences=True, input_shape=(x_train.shape[1], 1)))
+regressor.add(CuDNNLSTM(units=30,return_sequences=True, input_shape=(x_train.shape[1], 1)))
 regressor.add(Dropout(rate=0.2))
-regressor.add(LSTM(units=45,return_sequences=True))
-regressor.add(Dropout(rate=0.2))
-regressor.add(LSTM(units=45,return_sequences=True))
-regressor.add(Dropout(rate=0.2))
-regressor.add(LSTM(units=45))
+regressor.add(CuDNNLSTM(units=30,return_sequences=False))
 regressor.add(Dropout(rate=0.2))
 regressor.add(Dense(units=1))
 
@@ -50,7 +50,7 @@ regressor.add(Dense(units=1))
 regressor.compile(optimizer='adam', loss='mean_squared_error')
 
 # fitting the network
-regressor.fit(x=x_train, y=y_train, epochs = 5, batch_size=4, verbose=2)
+regressor.fit(x=x_train, y=y_train, epochs = 45, batch_size=64, verbose=2)
 
 regressor.save('lstm.h5')
 
@@ -60,10 +60,10 @@ predictions = []
 for i in range(30, 1939):
     x_test = []
     x_test.append(data_test[i-30:i,0])
-    y_test.append(data_test[i])
+    y_test.append(sc.inverse_transform(np.array(data_test[i]).reshape(1,-1)))
     x_test = np.array(x_test)
     x_test = np.reshape(x_test, (1,30,1))
-    predictions.append(regressor.predict(x=x_test))
+    predictions.append(sc.inverse_transform(np.array(regressor.predict(x=x_test)).reshape(1,-1)))
 
 y_test = np.array(y_test)
 predictions = np.array(predictions)
@@ -72,5 +72,6 @@ predictions = predictions.squeeze()
 
 plt.plot(y_test)
 plt.plot(predictions)
+plt.savefig("plot.jpeg", dpi=1200)
 plt.show()
 
