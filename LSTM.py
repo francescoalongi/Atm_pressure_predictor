@@ -1,10 +1,8 @@
 import pandas as pd
-import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib.pyplot as plt
 import tensorflow as tf
-
 from sklearn.preprocessing import MinMaxScaler
-
 
 step = 3
 
@@ -21,8 +19,14 @@ sc = MinMaxScaler(feature_range=(0,1))
 data_train = data_train.reshape(-1,1)
 data_test = data_test.reshape(-1,1)
 data_train_scaled = sc.fit_transform(data_train)
-data_test_scaled = sc.transform(data_test)
 
+#write normalization parameter of the training set in a file, they will be used for run the network
+norm_par_file = open("../normalization_parameter.txt", "w+")
+norm_par_file.write("min: " + str(sc.data_min_) + "\n")
+norm_par_file.write("max: " + str(sc.data_max_))
+norm_par_file.close()
+
+data_test_scaled = sc.transform(data_test)
 
 # taking the last step measurements to predict the step + 1 pressure value
 x_train=[]
@@ -54,8 +58,6 @@ regressor.fit(x=x_train, y=y_train, epochs = 30, batch_size=64, verbose=2)
 
 regressor.save('lstm.h5')
 
-
-#regressor = tf.keras.models.load_model('../lstm.h5')
 # testing the model
 y_test = []
 predictions = []
@@ -75,4 +77,3 @@ plt.plot(y_test)
 plt.plot(predictions)
 plt.savefig("plot.jpeg", dpi=1200)
 plt.show()
-
