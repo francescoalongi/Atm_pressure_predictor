@@ -13,7 +13,7 @@ Given the pressure values of the last three time bands the LSTM is able to predi
 ## Performance on the test set
 The testing over a test set has performed as follows
 
-<img src="plot.jpeg" width="600">
+<img src="https://user-images.githubusercontent.com/19633559/72997782-1796cb00-3dfd-11ea-981b-4a00d616c1d9.jpeg" width="600">
 
 Where the orange line represents the predictions and the blue line represents the actual test value.
 
