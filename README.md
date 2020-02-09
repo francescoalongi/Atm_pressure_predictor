@@ -1,5 +1,5 @@
 # Atm pressure predictor
-This neural network is part of a bigger project in which the `lstm.h5` file is converted in a STM32-optimized library through the X-CUBE-AI expansion pack for STM32CubeMX. This library will be included and used in a NUCLEO-F401RE which will acquire atmospheric pressure data and use the STM32-optimized library to provide predictions over those data.
+This neural network is part of a bigger project (which can be found [here](https://github.com/nicologhielmetti/miosix-kernel)) in which the `lstm.h5` file is converted in a STM32-optimized library through the X-CUBE-AI expansion pack for STM32CubeMX. This library will be included and used in a NUCLEO-F401RE which will acquire atmospheric pressure data and use the STM32-optimized library to provide predictions over those data.
 
 ## The neural network
 It is a stacked LSTM model which takes as input three pressure values and outputs the predicted next pressure value. The pressure values which this LSTM model takes as input must be grouped in time bands, so a single pressure value corresponds to the average of the pressure measurements acquired in the following time bands:
