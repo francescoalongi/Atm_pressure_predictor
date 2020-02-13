@@ -1,3 +1,8 @@
+"""
+This script is the core of the Neural Network. Data are read, processed and then fed to the stacked LSTM model.
+Then, once the neural network is trained, a plot showing the performance of the neural network over the test is shown.
+"""
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -10,9 +15,12 @@ step = 3
 dcsv = pd.read_csv('../data_grouped.csv', usecols=['pressure'])
 data = dcsv['pressure'].values
 
+training_size = 18000
+test_size = data.size - training_size
+
 # splitting dataset into training set and test set
-data_train = data[:18000]
-data_test = data[18000:]
+data_train = data[:training_size]
+data_test = data[training_size:]
 
 # feature scaling: this will help lstm model to converge faster
 sc = MinMaxScaler(feature_range=(0,1))
@@ -73,7 +81,10 @@ predictions = np.array(predictions)
 y_test = y_test.squeeze()
 predictions = predictions.squeeze()
 
-plt.plot(y_test)
-plt.plot(predictions)
-plt.savefig("plot.jpeg", dpi=1200)
+plt.plot(y_test, linewidth=0.1, label="Test data")
+plt.plot(predictions, linewidth=0.1, label="Predictions")
+plt.xlabel("Samples")
+plt.ylabel("Atmospheric pressure (hPa)")
+plt.legend(loc='lower left')
+plt.savefig("nn_performance.svg", format="svg")
 plt.show()

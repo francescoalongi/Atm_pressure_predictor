@@ -15,10 +15,25 @@ Where the <n_i> tag stands for "not interested" in the analysis I have performed
 import re
 from datetime import datetime
 
+# This function was used to produce a dataset to train the network in a time range equal to the foreseen one (8h).
 def getTimeBand(datetime):
     if 0 <= datetime.hour < 8: return 0
     if 8 <= datetime.hour < 16: return 1
     if 16 <= datetime.hour <= 23: return 2
+
+# This function was used to produce a dataset to train the network in a time range shorter than the original one
+# (with this new setting, the prediction is provided each 40 minutes instead of each 8 hours). This has been done for
+# testing purposes.
+def getTimeBand40min(datetime):
+    j=0
+    for i in range(0, 23, 2):
+        if datetime.hour == i and datetime.minute < 40: return j
+        j+=1
+        if datetime.hour == i and datetime.minute >= 40 or datetime.hour == i+1 and datetime.minute < 20: return j
+        j+=1
+        if datetime.hour == i+1 and datetime.minute >= 20: return j
+        j+=1
+
 
 raw_data_input = open("../raw_test_data.txt", "r")
 data_output = open("../test_data.csv", "w+")
