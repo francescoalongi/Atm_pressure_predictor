@@ -10,6 +10,21 @@ import tensorflow as tf
 import datetime
 from sklearn.preprocessing import MinMaxScaler
 
+def prepare_input_dataset(data, data_size):
+    # taking the last step measurements to predict the step + 1 pressure value
+    x = []
+    y = []
+
+    for i in range(step, data_size):
+        x.append(data[i - step:i, 0])
+        y.append(data[i, 0])
+
+    x, y = np.array(x), np.array(y)
+
+    x = np.reshape(x, (x.shape[0], x.shape[1], 1))
+    y = np.reshape(y, (y.shape[0]))
+    return x, y
+
 step = 3
 train_test_split_ratio = 0.8
 train_val_split_ratio = 0.8
@@ -49,52 +64,36 @@ norm_par_file.close()
 data_test_scaled = sc.transform(data_test)
 data_val_scaled = sc.transform(data_val)
 
-# taking the last step measurements to predict the step + 1 pressure value
-x_train=[]
-y_train=[]
+x_train, y_train = prepare_input_dataset(data_train_scaled, training_size)
 
-for i in range(step,training_size):
-    x_train.append(data_train_scaled[i-step:i,0])
-    y_train.append(data_train_scaled[i,0])
+x_val, y_val = prepare_input_dataset(data_val_scaled, val_size)
 
-x_train, y_train = np.array(x_train), np.array(y_train)
-
-x_train = np.reshape(x_train, (x_train.shape[0], x_train.shape[1], 1))
-y_train = np.reshape(y_train, (y_train.shape[0]))
-
-# taking the last step measurements to predict the step + 1 pressure value
-x_val=[]
-y_val=[]
-
-for i in range(step,val_size):
-    x_val.append(data_train_scaled[i-step:i,0])
-    y_val.append(data_train_scaled[i,0])
-
-x_val, y_val = np.array(x_val), np.array(y_val)
-
-x_val = np.reshape(x_val, (x_val.shape[0], x_val.shape[1], 1))
-y_val = np.reshape(y_val, (y_val.shape[0]))
 
 # building the network
 regressor = tf.keras.models.Sequential()
-regressor.add(tf.keras.layers.LSTM(units=30,return_sequences=True, input_shape=(x_train.shape[1], 1)))
+regressor.add(tf.keras.layers.LSTM(units=50,return_sequences=True, input_shape=(x_train.shape[1], 1)))
 regressor.add(tf.keras.layers.Dropout(rate=0.2))
-regressor.add(tf.keras.layers.LSTM(units=30,return_sequences=False))
+regressor.add(tf.keras.layers.LSTM(units=50,return_sequences=False))
 regressor.add(tf.keras.layers.Dropout(rate=0.2))
 regressor.add(tf.keras.layers.Dense(units=1))
 
 # compiling the network
-regressor.compile(optimizer='adam', loss='mean_squared_error')
+regressor.compile(optimizer='adam', loss='mean_squared_error', metrics=['mae'])
 
 log_dir_ = "logs\\fit\\" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 tensorboard = tf.keras.callbacks.TensorBoard(log_dir=log_dir_, write_graph=False)
 
 # fitting the network
-regressor.fit(x=x_train, y=y_train, epochs = 30, batch_size=64, validation_data=(x_val,y_val), verbose=2, callbacks=[tensorboard])
+regressor.fit(x=x_train, y=y_train, epochs = 100, batch_size=64, validation_data=(x_val,y_val), verbose=2, callbacks=[tensorboard])
 
 regressor.save('lstm.h5')
 
+
+
 # testing the model
+x_test_ev, y_test_ev = prepare_input_dataset(data_test_scaled, test_size)
+print(regressor.metrics_names, regressor.evaluate(x_test_ev, y_test_ev, batch_size=64))
+
 y_test = []
 predictions = []
 for i in range(step, 1939):
